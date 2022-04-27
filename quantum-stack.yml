@@ -10,6 +10,7 @@ services:
     environment:
       - RIDE2GO_TOKEN=${RIDE2GO_TOKEN:?missing env var RIDE2GO_TOKEN}
       - ADMIN_TOKEN=${ADMIN_TOKEN:?missing env var ADMIN_TOKEN}
+      - TZ=Europe/Berlin
     deploy:
       replicas: 1
       placement:

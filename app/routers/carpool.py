@@ -20,10 +20,11 @@ router = APIRouter(
     tags=["carpool"]
 )
 
-
+# TODO Has same implementaation as post, so we just need one (keep post, delete put)
 @router.put("/",
             operation_id="updatecarpool",
             summary="Update an existing carpool",
+            # TODO can this be removed as declaration has ->  Carpool
             response_model=Carpool,
             description="Carpool object that should be updated",
             status_code=status.HTTP_202_ACCEPTED,
@@ -53,29 +54,20 @@ async def put_carpool(carpool: Carpool = Body(..., examples=examples),
 
 @router.post("/",
              operation_id="addcarpool",
-             summary="Add a new carpool",
-             description="Carpool object to be created",
+             summary="Add a new or update existing carpool",
+             description="Carpool object to be created or updated",
              response_model=Carpool,
              responses={
-                 status.HTTP_200_OK: {
-                     "description": "Carpool created"},
-                 # TODO note that automatic validations against the schema
-                 # are returned with code 422, also shown in Swagger.
-                 # maybe 405 is not needed?
                  status.HTTP_404_NOT_FOUND: {
                      "description": "Agency does not exist"},
-                 status.HTTP_405_METHOD_NOT_ALLOWED: {
-                     "description": "Validation exception"},
-                 status.HTTP_409_CONFLICT: {
-                     "description": "Carpool with this id exists already."}})
+                 
+                })
 async def post_carpool(carpool: Carpool = Body(..., examples=examples),
                        requesting_agency_id: str = Depends(verify_api_key)) -> Carpool:
     await verify_permission_for_same_agency_or_admin(carpool.agency, requesting_agency_id)
 
     logger.info(f"POST trip {carpool.agency}:{carpool.id}.")
-    # TODO DRY, implementation same as PUT
     await assert_agency_exists(carpool.agency)
-    await assert_carpool_does_not_exist(carpool.agency, carpool.id)
 
     await set_lastUpdated_if_unset(carpool)
 
@@ -83,21 +75,14 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples),
 
     return carpool
     
-
+# TODO 403
 @router.get("/{agency_id}/{carpool_id}",
             operation_id="getcarpoolById",
             summary="Find carpool by ID",
             response_model=Carpool,
             description="Find carpool by ID",
-            status_code=status.HTTP_200_OK,
-            # TODO next to the status codes are "Links". There is nothing shown now.
-            # Either show something there, or hide the Links, or do nothing.
             responses={
                 status.HTTP_404_NOT_FOUND: {"description": "Carpool not found"},
-                # TODO note that automatic validations against the schema
-                # are returned with code 422, also shown in Swagger.
-                # maybe 405 is not needed?
-                # 405: {"description": "Validation exception"}
             },
             )
 async def get_carpool(agency_id: str, carpool_id: str, api_key: str = Depends(verify_api_key)) -> Carpool:
@@ -113,17 +98,10 @@ async def get_carpool(agency_id: str, carpool_id: str, api_key: str = Depends(ve
 @router.delete("/{agency_id}/{carpool_id}",
                operation_id="deletecarpool",
                summary="Deletes a carpool",
-               description="carpool id to delete",
-               status_code=status.HTTP_200_OK,
-               # TODO next to the status codes are "Links". There is nothing shown now.
-               # Either show something there, or hide the Links, or do nothing.
+               description="Carpool id to delete",
                responses={
                    status.HTTP_404_NOT_FOUND: {
-                       "description": "Carpool not found"},
-                   # TODO note that automatic validations against the schema
-                   # are returned with code 422, also shown in Swagger.
-                   # maybe 405 is not needed?
-                   # 405: {"description": "Validation exception"}
+                       "description": "Carpool or agency not found"},
                },
                )
 async def delete_carpool(agency_id: str, carpool_id: str, requesting_agency_id: str = Depends(verify_api_key)):
@@ -182,7 +160,7 @@ async def assert_carpool_exists(agency_id: str, carpool_id: str):
             status_code=404,
             detail=f"Carpool with id {carpool_id} for agency {agency_id} not found")
 
-
+# TODO not needed any longer if post is for new and updated carpools
 async def assert_carpool_does_not_exist(agency_id: str, carpool_id: str):
     carpool_exists = os.path.exists(f"data/carpool/{agency_id}/{carpool_id}.json")
     if carpool_exists:
@@ -194,4 +172,5 @@ async def delete_agency_carpools_older_than(agency_id, timestamp):
     for carpool_file_name in glob(f'data/carpool/{agency_id}/*.json'):
         if os.path.getmtime(carpool_file_name) < timestamp:
             m = re.search(r'([a-zA-Z0-9_-]+)\.json$', carpool_file_name)
+            # TODO log deletion
             await _delete_carpool(agency_id, m[1])

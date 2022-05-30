@@ -26,15 +26,10 @@ router = APIRouter(
             summary="Find agency by ID",
             response_model=Agency,
             description="Find agency by ID",
-            status_code=status.HTTP_200_OK,
             # TODO next to the status codes are "Links". There is nothing shown now.
             # Either show something there, or hide the Links, or do nothing.
-            responses={
-                status.HTTP_404_NOT_FOUND: {"description": "Carpool not found"},
-                # TODO note that automatic validations against the schema
-                # are returned with code 422, also shown in Swagger.
-                # maybe 405 is not needed?
-                # 405: {"description": "Validation exception"}
+            responses={ 
+                status.HTTP_404_NOT_FOUND: {"description": "Agency not found"},
             },
             )
 async def get_agency(agency_id: str, admin_api_key: str = Depends(verify_api_key)) -> Agency:
@@ -51,6 +46,7 @@ async def get_agency(agency_id: str, admin_api_key: str = Depends(verify_api_key
 
     return agency
 
+# TODO add push batch endpoint
 
 @router.post("/{agency_id}/sync",
              operation_id="sync",
@@ -76,8 +72,8 @@ async def sync(agency_id: str, requesting_agency_id: str = Depends(verify_api_ke
 
     try:
         carpools = import_function()
-        # Reduce current time by a second to avoid inter process timestamp issues
-        synced_files_older_than = time.time() - 1
+        # Reduce current time by a minute to avoid inter process timestamp issues
+        synced_files_older_than = time.time() - 60
         result = [await store_carpool(cp) for cp in carpools]
         await delete_agency_carpools_older_than(agency_id, synced_files_older_than)
         return result

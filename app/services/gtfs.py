@@ -1,5 +1,6 @@
 import app.services.gtfsrt.gtfs_realtime_pb2 as gtfs_realtime_pb2
 import app.services.gtfsrt.realtime_extension_pb2 as mfdzrte
+from app.services.gtfs_constants import *
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.json_format import ParseDict
 from datetime import datetime, timedelta
@@ -57,13 +58,13 @@ class GtfsRtProducer():
 
 	def _get_deleted(self, bbox = None):
 		return self._get_updates(
-			self.trip_store.deleted_trips.values(),
+			self.trip_store.recently_deleted_trips(),
 			self._as_delete_updates,
 			bbox)
 
 	def _get_added(self, bbox = None):
 		return self._get_updates(
-			self.trip_store.recent_trips.values(),
+			self.trip_store.recently_added_trips(),
 			self._as_added_updates,
 			bbox)
 	
@@ -100,18 +101,18 @@ class GtfsRtProducer():
 		      'stopSequence': stoptime.stop_sequence, 
 		      'arrival': {
 		        'time': self._to_seconds(fromdate, stoptime.arrival_time),
-		        'uncertainty': 600
+		        'uncertainty': MFDZ_DEFAULT_UNCERTAINITY
 		      },
 		      'departure': {
 		        'time':  self._to_seconds(fromdate, stoptime.departure_time),
-		        'uncertainty': 600
+		        'uncertainty': MFDZ_DEFAULT_UNCERTAINITY
 		      }, 
 		      'stopId': stoptime.stop_id, 
 		      'scheduleRelationship': 'SCHEDULED',
 		      'stop_time_properties': {
 		        '[transit_realtime.stop_time_properties]': {
-		          'dropoffType': 'COORDINATE_WITH_DRIVER' if stoptime.drop_off_type == 3 else 'NONE',
-		          'pickupType': 'COORDINATE_WITH_DRIVER' if stoptime.pickup_type == 3 else 'NONE'
+		          'dropoffType': 'COORDINATE_WITH_DRIVER' if stoptime.drop_off_type == STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER else 'NONE',
+		          'pickupType': 'COORDINATE_WITH_DRIVER' if stoptime.pickup_type == STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER else 'NONE'
 		        }
 		      }
 		    }
@@ -129,7 +130,7 @@ class GtfsRtProducer():
 					'routeUrl' : trip.url,
 				    'agencyId' : trip.agency,
 				    'route_long_name' : trip.route_long_name(),
-				    'route_type': 1700
+				    'route_type': RIDESHARING_ROUTE_TYPE
 			    	}
 		    },
 		    'stopTimeUpdate': self._to_stop_times(trip, trip_date)

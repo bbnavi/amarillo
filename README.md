@@ -40,6 +40,20 @@ Permissions work this way
 - API-Keys for agencies are allowed to POST/PUT/GET/DELETE their own 
   resources and GET some public resources.  
 
+## Development
+
+### GTFS-RT python bindings
+
+In case you modify or update the proto-files in app/proto, you'll need to regenerate the python bindings. First, create the python files:
+
+```sh
+$ cd app/proto
+$ protoc --version
+libprotoc 3.21.6
+$ protoc --proto_path=. --python_out=../services/gtfsrt gtfs-realtime.proto realtime_extension.proto
+$ sed 's/import gtfs_realtime_pb2/import app.services.gtfsrt.gtfs_realtime_pb2/g' ../services/gtfsrt/realtime_extension_pb2.py | sponge ../services/gtfsrt/realtime_extension_pb2.py
+```
+
 ## Testing
 
 In the top directory, run `pytest app/tests`.
@@ -49,4 +63,5 @@ In the top directory, run `pytest app/tests`.
 Based on [tiangolo/uvicorn-gunicorn:python3.9-slim](https://github.com/tiangolo/uvicorn-gunicorn-docker)
 
 - build `docker build -t amarillo .`
-- run `docker run -p 8000:80 -e ADMIN_TOKEN=%ADMIN_TOKEN% -e RIDE2GO_TOKEN=%RIDE2GO_TOKEN% -e TZ=Europe/Berlin -v $(pwd)/data:/app/data amarillo`
+- run `docker run --rm -p 8000:80 -e ADMIN_TOKEN=
+$ADMIN_TOKEN -e RIDE2GO_TOKEN=$RIDE2GO_TOKEN -e TZ=Europe/Berlin -v $(pwd)/data:/app/data amarillo`

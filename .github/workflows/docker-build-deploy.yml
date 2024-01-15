@@ -7,7 +7,7 @@ on:
       - deploy
 
 env:
-  DOCKER_IMAGE: registry.gitlab.tpwd.de/tpwd/bb-navi/amarillo
+  DOCKER_IMAGE: git.bbnavi.de/bbnavi-reg/amarillo:latest
   DOCKER_TAG: production
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: git.bbnavi.de/bbnavi-reg/ocpdb-proxy:latest
+        tags: git.bbnavi.de/bbnavi-reg/amarillo:latest
   deploy:
     runs-on: self-hosted
     needs:

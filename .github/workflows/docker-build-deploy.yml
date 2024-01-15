@@ -41,8 +41,8 @@ jobs:
           docker-compose -f quantum-stack.yml config | tee stack.yml
           echo -e "---\nversion: '1.0'\ncompose: stack.yml" >.quantum
       - name: Deploy to swarm
-          uses: sagebind/docker-swarm-deploy-action@v2
-          with:
+        uses: sagebind/docker-swarm-deploy-action@v2
+        with:
             remote_host: ssh://ec2-user@3.79.201.75
             ssh_private_key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
             ssh_public_key: ${{ secrets.AWS_SSH_MANAGER_PUBKEY }}

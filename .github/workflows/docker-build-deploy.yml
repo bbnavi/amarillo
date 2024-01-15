@@ -7,8 +7,8 @@ on:
       - deploy
 
 env:
-  DOCKER_IMAGE: ghcr.io/bbnavi/amarillo:main
-  DOCKER_TAG: production
+  DOCKER_IMAGE: ghcr.io/bbnavi/amarillo
+  DOCKER_TAG: main
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
